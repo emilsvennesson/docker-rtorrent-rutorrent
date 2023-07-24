@@ -193,10 +193,17 @@ fi
 # rTorrent config
 echo "Checking rTorrent configuration..."
 if [ ! -f /data/rtorrent/.rtorrent.rc ]; then
-  echo "  Creating default configuration..."
+  echo "  Creating default rTorrent configuration..."
   cp /tpls/.rtorrent.rc /data/rtorrent/.rtorrent.rc
 fi
+# cross-seed script
+if [ ! -f /data/rtorrent/rtorrent-cross-seed.sh ]; then
+  echo "  Creating default cross-seed config..."
+  cp /tpls/rtorrent-cross-seed.sh /data/rtorrent/rtorrent-cross-seed.sh
+fi
 chown rtorrent:rtorrent /data/rtorrent/.rtorrent.rc
+chown rtorrent:rtorrent /data/rtorrent/rtorrent-cross-seed.sh
+chmod +x /data/rtorrent/rtorrent-cross-seed.sh
 
 # ruTorrent config
 echo "Bootstrapping ruTorrent configuration..."
