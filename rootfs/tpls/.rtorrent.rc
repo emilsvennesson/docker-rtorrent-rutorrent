@@ -55,6 +55,3 @@ directory.watch.added = (cat,(cfg.watch)), load.start
 
 # Close torrents when diskspace is low
 schedule2 = monitor_diskspace, 15, 60, ((close_low_diskspace,1000M))
-
-# cross-seed
-method.set_key=event.download.finished,cross_seed,"execute={'`pwd`/rtorrent-cross-seed.sh',$d.name=}"

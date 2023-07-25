@@ -7,6 +7,7 @@ method.insert = cfg.download, private|const|string, (cat,"/downloads/")
 method.insert = cfg.download_complete, private|const|string, (cat,(cfg.download),"complete/")
 method.insert = cfg.download_temp, private|const|string, (cat,(cfg.download),"temp/")
 method.insert = cfg.logs, private|const|string, (cat,(cfg.basedir),"log/")
+method.insert = cfg.cs, private|const|string, (cat,(cfg.basedir),"rtorrent-cross-seed.sh")
 method.insert = cfg.session, private|const|string, (cat,(cfg.basedir),".session/")
 method.insert = cfg.watch, private|const|string, (cat,(cfg.basedir),"watch/")
 method.insert = cfg.rundir, private|const|string, (cat,"/var/run/rtorrent/")
@@ -54,3 +55,6 @@ log.add_output = "rpc_events","log"
 
 # Initialize plugins
 execute2 = {sh,-c,/usr/bin/php81 /var/www/rutorrent/php/initplugins.php rtorrent &}
+
+# cross-seed
+method.set_key=event.download.finished,cross_seed,"execute={(cat,(cfg.cs)),$d.name=}"
