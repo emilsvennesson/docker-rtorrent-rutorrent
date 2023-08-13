@@ -1,5 +1,14 @@
 # Changelog
 
+## 4.2.2-0.9.8-0.13.8-r0 (2023/08/13)
+
+* ruTorrent v4.2.2 (#260)
+
+## 4.1.7-0.9.8-0.13.8-r0 (2023/08/01)
+
+* ruTorrent v4.1.7 (#251 #248)
+* Alpine Linux 3.18 (#258)
+
 ## 4.1.5-0.9.8-0.13.8-r1 (2023/05/17)
 
 * Improve session saving in rTorrent (#242)
@@ -226,10 +235,10 @@
 > :warning: **UPGRADE NOTES**
 > As the Docker container now runs as a non-root user, you have to first stop the container and change permissions to volumes:
 > ```
-> docker-compose stop
+> docker compose stop
 > chown -R 1000:1000 data/ passwd/
-> docker-compose pull
-> docker-compose up -d
+> docker compose pull
+> docker compose up -d
 > ```
 
 ## 3.9-0.9.8-0.13.8-RC3 (2019/09/04)
