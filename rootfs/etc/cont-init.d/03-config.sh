@@ -25,6 +25,7 @@ RT_LOG_LEVEL=${RT_LOG_LEVEL:-info}
 RT_LOG_EXECUTE=${RT_LOG_EXECUTE:-false}
 RT_LOG_XMLRPC=${RT_LOG_XMLRPC:-false}
 RT_SESSION_SAVE_SECONDS=${RT_SESSION_SAVE_SECONDS:-3600}
+RT_TRACKER_DELAY_SCRAPE=${RT_TRACKER_DELAY_SCRAPE:-true}
 
 RU_REMOVE_CORE_PLUGINS=${RU_REMOVE_CORE_PLUGINS:-httprpc}
 RU_HTTP_USER_AGENT=${RU_HTTP_USER_AGENT:-Mozilla/5.0 (Windows NT 6.0; WOW64; rv:12.0) Gecko/20100101 Firefox/12.0}
@@ -72,17 +73,17 @@ echo "Setting PHP-FPM configuration..."
 sed -e "s/@MEMORY_LIMIT@/$MEMORY_LIMIT/g" \
   -e "s/@UPLOAD_MAX_SIZE@/$UPLOAD_MAX_SIZE/g" \
   -e "s/@CLEAR_ENV@/$CLEAR_ENV/g" \
-  /tpls/etc/php81/php-fpm.d/www.conf > /etc/php81/php-fpm.d/www.conf
+  /tpls/etc/php82/php-fpm.d/www.conf > /etc/php82/php-fpm.d/www.conf
 
 echo "Setting PHP INI configuration..."
-sed -i "s|memory_limit.*|memory_limit = ${MEMORY_LIMIT}|g" /etc/php81/php.ini
-sed -i "s|;date\.timezone.*|date\.timezone = ${TZ}|g" /etc/php81/php.ini
-sed -i "s|max_file_uploads.*|max_file_uploads = ${MAX_FILE_UPLOADS}|g" /etc/php81/php.ini
+sed -i "s|memory_limit.*|memory_limit = ${MEMORY_LIMIT}|g" /etc/php82/php.ini
+sed -i "s|;date\.timezone.*|date\.timezone = ${TZ}|g" /etc/php82/php.ini
+sed -i "s|max_file_uploads.*|max_file_uploads = ${MAX_FILE_UPLOADS}|g" /etc/php82/php.ini
 
 # OpCache
 echo "Setting OpCache configuration..."
 sed -e "s/@OPCACHE_MEM_SIZE@/$OPCACHE_MEM_SIZE/g" \
-  /tpls/etc/php81/conf.d/opcache.ini > /etc/php81/conf.d/opcache.ini
+  /tpls/etc/php82/conf.d/opcache.ini > /etc/php82/conf.d/opcache.ini
 
 # Nginx
 echo "Setting Nginx configuration..."

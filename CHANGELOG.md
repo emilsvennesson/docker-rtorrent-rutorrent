@@ -1,5 +1,35 @@
 # Changelog
 
+## 4.2.9-0.9.8_2-0.13.8_2-r0 (2023/12/27)
+
+* UDNS support (#303)
+* Fix PHP version in rtlocal.rc (#305)
+
+## 4.2.9-0.9.8_2-0.13.8_1-r0 (2023/12/23)
+
+* rTorrent: tracker scrape feature patch (#288)
+* Alpine Linux 3.19 and PHP 8.2 (#297)
+* cURL 8.5.0, c-ares 1.24.0 (#295)
+
+## 4.2.9-0.9.8_1-0.13.8_1-r0 (2023/12/17)
+
+* rTorrent patches
+  * Avoid stack overflow for lockfile buffer
+  * Increase maximum SCGI request to 16MB
+  * Fix saving session files
+  * Fix a common rtorrent xml-rpc crash when trying to queue an invalid task
+  * Resolve xmlrpc logic crash
+* libtorrent patches
+  * Allow 10 gigabit speed throttles
+
+## 4.2.9-0.9.8-0.13.8-r0 (2023/11/18)
+
+* ruTorrent v4.2.9 (#282)
+
+## 4.2.6-0.9.8-0.13.8-r0 (2023/09/24)
+
+* ruTorrent v4.2.6 (#266)
+
 ## 4.2.5-0.9.8-0.13.8-r0 (2023/08/29)
 
 * ruTorrent v4.2.5 (#263)

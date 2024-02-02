@@ -1,19 +1,19 @@
 # syntax=docker/dockerfile:1
 
 ARG LIBSIG_VERSION=3.0.3
-ARG CARES_VERSION=1.17.2
-ARG CURL_VERSION=7.78.0
+ARG CARES_VERSION=1.24.0
+ARG CURL_VERSION=8.5.0
 ARG XMLRPC_VERSION=01.58.00
 ARG LIBTORRENT_VERSION=v0.13.8
 ARG RTORRENT_VERSION=v0.9.8
 ARG MKTORRENT_VERSION=v1.1
 ARG GEOIP2_PHPEXT_VERSION=1.3.1
 
-# v4.2.5
-ARG RUTORRENT_VERSION=4c4af8621846ea722819cdbcf1d0b7e3bea0df09
+# v4.2.10
+ARG RUTORRENT_VERSION=c9644dda7a9ac1b3fc8b663392c4168adbe5a312
 ARG GEOIP2_RUTORRENT_VERSION=4ff2bde530bb8eef13af84e4413cedea97eda148
 
-ARG ALPINE_VERSION=3.18
+ARG ALPINE_VERSION=3.19
 ARG ALPINE_S6_VERSION=${ALPINE_VERSION}-2.2.0.3
 
 FROM --platform=${BUILDPLATFORM} alpine:${ALPINE_VERSION} AS src
@@ -81,6 +81,7 @@ RUN apk --update --no-cache add \
     brotli-dev \
     build-base \
     cppunit-dev \
+    cmake \
     gd-dev \
     geoip-dev \
     libtool \
@@ -89,11 +90,13 @@ RUN apk --update --no-cache add \
     ncurses-dev \
     nghttp2-dev \
     openssl-dev \
+    patch \
     pcre-dev \
-    php81-dev \
-    php81-pear \
+    php82-dev \
+    php82-pear \
     tar \
     tree \
+    udns-dev \
     xz \
     zlib-dev
 
@@ -109,60 +112,63 @@ RUN tree ${DIST_PATH}
 
 WORKDIR /usr/local/src/cares
 COPY --from=src-cares /src .
-RUN ./configure
-RUN make -j$(nproc) CFLAGS="-O2 -flto"
+RUN cmake . -D CARES_SHARED=ON -D CMAKE_BUILD_TYPE:STRING="Release" -D CMAKE_C_FLAGS_RELEASE:STRING="-O3 -flto=\"$(nproc)\" -pipe"
+RUN cmake --build . --clean-first --parallel $(nproc)
 RUN make install -j$(nproc)
 RUN make DESTDIR=${DIST_PATH} install -j$(nproc)
 RUN tree ${DIST_PATH}
 
 WORKDIR /usr/local/src/curl
 COPY --from=src-curl /src .
-RUN ./configure \
-  --enable-ares \
-  --enable-tls-srp \
-  --enable-gnu-tls \
-  --with-brotli \
-  --with-ssl \
-  --with-zlib
-RUN make -j$(nproc) CFLAGS="-O2 -flto -pipe"
+RUN cmake . -D ENABLE_ARES=ON CURL_LTO=ON -D CURL_USE_OPENSSL=ON -D CURL_BROTLI=ON -D CURL_ZSTD=ON -D BUILD_SHARED_LIBS=ON -D CMAKE_BUILD_TYPE:STRING="Release" -D CMAKE_C_FLAGS_RELEASE:STRING="-O3 -flto=\"$(nproc)\" -pipe"
+RUN cmake --build . --clean-first --parallel $(nproc)
 RUN make install -j$(nproc)
 RUN make DESTDIR=${DIST_PATH} install -j$(nproc)
 RUN tree ${DIST_PATH}
 
 WORKDIR /usr/local/src/xmlrpc
 COPY --from=src-xmlrpc /src .
-RUN ./configure \
-   --disable-wininet-client \
-   --disable-libwww-client
-RUN make -j$(nproc)
-RUN make install -j$(nproc) CXXFLAGS="-flto"
+RUN ./configure --disable-wininet-client --disable-libwww-client --disable-cplusplus
+RUN make -j$(nproc) CFLAGS="-w -O3 -flto" CXXFLAGS="-w -O3 -flto"
+RUN make install -j$(nproc)
 RUN make DESTDIR=${DIST_PATH} install -j$(nproc)
 RUN tree ${DIST_PATH}
 
 WORKDIR /usr/local/src/libtorrent
 COPY --from=src-libtorrent /src .
+COPY /patches/libtorrent .
+RUN patch -p1 < throttle-fix-0.13.8.patch \
+  && patch -p1 < libtorrent-udns-0.13.8.patch \
+  && patch -p1 < libtorrent-scanf-0.13.8.patch
 RUN ./autogen.sh
-RUN ./configure \
-  --with-posix-fallocate
-RUN make -j$(nproc)
-RUN make install -j$(nproc) CXXFLAGS="-O2 -flto"
+RUN ./configure --with-posix-fallocate --enable-aligned
+RUN make -j$(nproc) CXXFLAGS="-w -O3 -flto"
+RUN make install -j$(nproc)
 RUN make DESTDIR=${DIST_PATH} install -j$(nproc)
 RUN tree ${DIST_PATH}
 
 WORKDIR /usr/local/src/rtorrent
 COPY --from=src-rtorrent /src .
+COPY /patches/rtorrent .
+RUN patch -p1 < lockfile-fix.patch \
+  && patch -p1 < rtorrent-scrape.patch \
+  && patch -p1 < scgi-fix.patch \
+  && patch -p1 < session-file-fix.patch \
+  && patch -p1 < xmlrpc-fix.patch \
+  && patch -p1 < xmlrpc-logic-fix.patch \
+  && patch -p1 < rtorrent-ml-cg-fix.patch \
+  && patch -p1 < rtorrent-ml-cui-fix.patch \
+  && patch -p1 < rtorrent-ml-dc-fix.patch
 RUN ./autogen.sh
-RUN ./configure \
-  --with-xmlrpc-c \
-  --with-ncurses
-RUN make -j$(nproc) CXXFLAGS="-O2 -flto"
+RUN ./configure --with-xmlrpc-c --with-ncurses
+RUN make -j$(nproc) CXXFLAGS="-w -O3 -flto"
 RUN make install -j$(nproc)
 RUN make DESTDIR=${DIST_PATH} install -j$(nproc)
 RUN tree ${DIST_PATH}
 
 WORKDIR /usr/local/src/mktorrent
 COPY --from=src-mktorrent /src .
-RUN make -j$(nproc)
+RUN make -j$(nproc) CC=gcc CFLAGS="-w -O3 -flto"
 RUN make install -j$(nproc)
 RUN make DESTDIR=${DIST_PATH} install -j$(nproc)
 RUN tree ${DIST_PATH}
@@ -171,13 +177,13 @@ WORKDIR /usr/local/src/geoip2-phpext
 COPY --from=src-geoip2-phpext /src .
 RUN <<EOT
   set -e
-  phpize81
+  phpize82
   ./configure
   make
   make install
 EOT
-RUN mkdir -p ${DIST_PATH}/usr/lib/php81/modules
-RUN cp -f /usr/lib/php81/modules/geoip.so ${DIST_PATH}/usr/lib/php81/modules/
+RUN mkdir -p ${DIST_PATH}/usr/lib/php82/modules
+RUN cp -f /usr/lib/php82/modules/geoip.so ${DIST_PATH}/usr/lib/php82/modules/
 RUN tree ${DIST_PATH}
 
 FROM crazymax/alpine-s6:${ALPINE_S6_VERSION}
@@ -205,6 +211,7 @@ RUN apk --update --no-cache add \
     brotli \
     ca-certificates \
     coreutils \
+    cppunit-dev \
     dhclient \
     ffmpeg \
     findutils \
@@ -218,34 +225,32 @@ RUN apk --update --no-cache add \
     nginx-mod-http-dav-ext \
     nginx-mod-http-geoip2 \
     openssl \
-    php81 \
-    php81-bcmath \
-    php81-cli \
-    php81-ctype \
-    php81-curl \
-    php81-dom \
-    php81-fpm \
-    php81-json \
-    php81-mbstring \
-    php81-openssl \
-    php81-phar \
-    php81-posix \
-    php81-session \
-    php81-sockets \
-    php81-xml \
-    php81-zip \
-    php81-zlib \
+    php82 \
+    php82-bcmath \
+    php82-ctype \
+    php82-curl \
+    php82-dom \
+    php82-fpm \
+    php82-mbstring \
+    php82-openssl \
+    php82-phar \
+    php82-posix \
+    php82-session \
+    php82-sockets \
+    php82-xml \
+    php82-zip \
     python3 \
     py3-pip \
     shadow \
     sox \
     tar \
     tzdata \
+    udns \
     unzip \
     util-linux \
     zip \
-  && pip3 install --upgrade pip \
-  && pip3 install cfscrape cloudscraper \
+  && pip3 install --upgrade --break-system-packages pip \
+  && pip3 install --break-system-packages cfscrape cloudscraper \
   && addgroup -g ${PGID} rtorrent \
   && adduser -D -H -u ${PUID} -G rtorrent -s /bin/sh rtorrent \
   && curl --version \

@@ -42,6 +42,8 @@ ___
   * [Edit a ruTorrent plugin configuration](#edit-a-rutorrent-plugin-configuration)
   * [Increase Docker timeout to allow rTorrent to shutdown gracefully](#increase-docker-timeout-to-allow-rtorrent-to-shutdown-gracefully)
   * [WAN IP address](#wan-ip-address)
+  * [Configure rTorrent session saving](#configure-rtorrent-session-saving)
+  * [Configure rTorrent tracker scrape](#rtorrent-tracker-scrape-patch)
 * [Upgrade](#upgrade)
 * [Contributing](#contributing)
 * [License](#license)
@@ -51,8 +53,10 @@ ___
 * Run as non-root user
 * Multi-platform image
 * Latest [rTorrent](https://github.com/rakshasa/rtorrent) / [libTorrent](https://github.com/rakshasa/libtorrent) release compiled from source
+  * Includes [rTorrent patches](./patches/rtorrent) to increase software stability
+  * Includes [libtorrent patches](./patches/libtorrent) to increase software stability
 * Latest [ruTorrent](https://github.com/Novik/ruTorrent) release
-* Name resolving enhancements with [c-ares](https://github.com/rakshasa/rtorrent/wiki/Performance-Tuning#rtrorrent-with-c-ares) for asynchronous DNS requests (including name resolves)
+* Domain name resolving enhancements with [c-ares](https://github.com/rakshasa/rtorrent/wiki/Performance-Tuning#rtrorrent-with-c-ares) and [UDNS](https://www.corpit.ru/mjt/udns.html) for asynchronous DNS requests
 * Enhanced [rTorrent config](rootfs/tpls/.rtorrent.rc) and bootstraping with a [local config](rootfs/tpls/etc/rtorrent/.rtlocal.rc)
 * XMLRPC through nginx over SCGI socket (basic auth optional)
 * WebDAV on completed downloads (basic auth optional)
@@ -132,6 +136,7 @@ Image: crazymax/rtorrent-rutorrent:latest
 * `RT_LOG_EXECUTE`: Log executed commands to `/data/rtorrent/log/execute.log` (default `false`)
 * `RT_LOG_XMLRPC`: Log XMLRPC queries to `/data/rtorrent/log/xmlrpc.log` (default `false`)
 * `RT_SESSION_SAVE_SECONDS`: Seconds between writing torrent information to disk (default `3600`)
+* `RT_TRACKER_DELAY_SCRAPE`: Delay tracker announces at startup (default `true`)
 * `RT_DHT_PORT`: DHT UDP port (`dht.port.set`, default `6881`)
 * `RT_INC_PORT`: Incoming connections (`network.port_range.set`, default `50000`)
 
@@ -342,6 +347,14 @@ Only torrent statistics are lost during a crash. (Ratio, Total Uploaded & Downlo
 Higher values will reduce disk usage, at the cost of minor stat loss during a crash.
 Consider increasing to 10800 seconds (3 hours) if running thousands of torrents.
 
+### rTorrent tracker scrape patch
+
+`RT_TRACKER_DELAY_SCRAPE` specifies whether to delay tracker announces at rTorrent startup.
+The default value is `true`. There are two main benefits to keeping this feature enabled:
+
+1) Software Stability: rTorrent will not crash or time-out with tens of thousands of trackers.
+2) Immediate Access: ruTorrent can be accessed immediately after rTorrent is started.
+
 ## Upgrade
 
 To upgrade, pull the newer image and launch the container:
@@ -353,9 +366,10 @@ docker compose up -d
 
 ## Contributing
 
-Want to contribute? Awesome! The most basic way to show your support is to star the project, or to raise issues. You
-can also support this project by [**becoming a sponsor on GitHub**](https://github.com/sponsors/crazy-max) or by making
-a [Paypal donation](https://www.paypal.me/crazyws) to ensure this journey continues indefinitely!
+Want to contribute? Awesome! The most basic way to show your support is to star
+the project, or to raise issues. You can also support this project by [**becoming a sponsor on GitHub**](https://github.com/sponsors/crazy-max)
+or by making a [PayPal donation](https://www.paypal.me/crazyws) to ensure this
+journey continues indefinitely!
 
 Thanks again for your support, it is much appreciated! :pray:
 
