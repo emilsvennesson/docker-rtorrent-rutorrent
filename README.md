@@ -14,8 +14,7 @@
 [rTorrent](https://github.com/rakshasa/rtorrent) with [ruTorrent](https://github.com/Novik/ruTorrent)
 Docker image.
 
-> **Note**
-> 
+> [!TIP] 
 > Want to be notified of new releases? Check out 🔔 [Diun (Docker Image Update Notifier)](https://github.com/crazy-max/diun)
 > project!
 
@@ -44,6 +43,7 @@ ___
   * [WAN IP address](#wan-ip-address)
   * [Configure rTorrent session saving](#configure-rtorrent-session-saving)
   * [Configure rTorrent tracker scrape](#rtorrent-tracker-scrape-patch)
+  * [Configure rTorrent send receive buffers](#rtorrent-send-receive-buffers)
 * [Upgrade](#upgrade)
 * [Contributing](#contributing)
 * [License](#license)
@@ -139,10 +139,12 @@ Image: crazymax/rtorrent-rutorrent:latest
 * `RT_TRACKER_DELAY_SCRAPE`: Delay tracker announces at startup (default `true`)
 * `RT_DHT_PORT`: DHT UDP port (`dht.port.set`, default `6881`)
 * `RT_INC_PORT`: Incoming connections (`network.port_range.set`, default `50000`)
+* `RT_SEND_BUFFER_SIZE`: Sets default tcp wmem value (`network.send_buffer.size.set`, default `4M`)
+* `RT_RECEIVE_BUFFER_SIZE`: Sets default tcp rmem value (`network.receive_buffer.size.set`, default `4M`)
 
 ### ruTorrent
 
-* `RU_REMOVE_CORE_PLUGINS`: Comma separated list of core plugins to remove ; set to `false` to disable removal (default `httprpc`)
+* `RU_REMOVE_CORE_PLUGINS`: Comma separated list of core plugins to remove ; set to `false` to disable removal 
 * `RU_HTTP_USER_AGENT`: ruTorrent HTTP user agent (default `Mozilla/5.0 (Windows NT 6.0; WOW64; rv:12.0) Gecko/20100101 Firefox/12.0`)
 * `RU_HTTP_TIME_OUT`: ruTorrent HTTP timeout in seconds (default `30`)
 * `RU_HTTP_USE_GZIP`: Use HTTP Gzip compression (default `true`)
@@ -337,23 +339,48 @@ resolve your public IP address. Here are some commands you can use:
 
 ### Configure rTorrent session saving
 
-`RT_SESSION_SAVE_SECONDS` is the seconds between writing torrent information to disk.
-The default is 3600 seconds which equals 1 hour. rTorrent has a bad default of 20 minutes.
-Twenty minutes is bad for the lifespan of SSDs and greatly reduces torrent throughput.
+`RT_SESSION_SAVE_SECONDS` is the seconds between writing torrent information to
+disk. The default is 3600 seconds which equals 1 hour. rTorrent has a bad
+default of 20 minutes. Twenty minutes is bad for the lifespan of SSDs and
+greatly reduces torrent throughput.
 
-It is no longer possible to lose torrents added through ruTorrent on this docker container.
-Only torrent statistics are lost during a crash. (Ratio, Total Uploaded & Downloaded etc.)
+It is no longer possible to lose torrents added through ruTorrent on this
+docker container. Only torrent statistics are lost during a crash. (Ratio,
+Total Uploaded & Downloaded etc.)
 
-Higher values will reduce disk usage, at the cost of minor stat loss during a crash.
-Consider increasing to 10800 seconds (3 hours) if running thousands of torrents.
+Higher values will reduce disk usage, at the cost of minor stat loss during a
+crash. Consider increasing to 10800 seconds (3 hours) if running thousands of
+torrents.
 
 ### rTorrent tracker scrape patch
 
-`RT_TRACKER_DELAY_SCRAPE` specifies whether to delay tracker announces at rTorrent startup.
-The default value is `true`. There are two main benefits to keeping this feature enabled:
+`RT_TRACKER_DELAY_SCRAPE` specifies whether to delay tracker announces at
+rTorrent startup. The default value is `true`. There are two main benefits to
+keeping this feature enabled:
 
 1) Software Stability: rTorrent will not crash or time-out with tens of thousands of trackers.
 2) Immediate Access: ruTorrent can be accessed immediately after rTorrent is started.
+
+### rTorrent send receive buffers
+
+Overriding the default TCP rmem and wmem values for rTorrent improves torrent
+throughput.
+
+* `RT_SEND_BUFFER_SIZE`: Sets default tcp wmem value for the socket.
+* `RT_RECEIVE_BUFFER_SIZE`: Sets default tcp rmem value for the socket.
+
+Recommended values:
+* `2GB of less system memory`: Reduce to 1M send and 1M receive regardless of speed.
+* `4GB to 16GB of system memory`: Keep at default values of 4M send and 4M receive.
+* `16GB to 32GB of system memory`: Increase to 8M send for 500Mbps speeds.
+* `32GB to 64GB of system memory`: Increase to 16M send for 1G speeds.
+* `64GB to 128GB of system memory`: Increase to 32M send for 2.5G speeds.
+* `128GB to 256GB of system memory`: Increase to 64M send for 10G speeds.
+
+Memory is better spent elsewhere except under limited circumstances for high
+memory and speed conditions. The default values should not be increased, unless
+both the memory and speed requirements are met. These values of system memory
+are also recommended based on the port speed for rTorrent to reduce disk usage.
 
 ## Upgrade
 

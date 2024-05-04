@@ -1,5 +1,18 @@
 # Changelog
 
+## 4.3.0-0.9.8_3-0.13.8_2-r0 (2024/05/01)
+
+* Set `useInternalHybrid` ruTorrent setting to `true` (#341) 
+* Fix missing changes in `.rtlocal.rc` (#338)
+
+## 4.3.0-0.9.8_2-0.13.8_2-r0 (2024/04/27)
+
+* ruTorrent v4.3.0 (#327 #316)
+* rTorrent: Add TCP socket configurations (#322)
+* Add `php82-fileinfo` package (#325)
+* rTorrent: Set of patches to fix memory leaks (#308)
+* rTorrent: Fix memory access crash (#310)
+
 ## 4.2.9-0.9.8_2-0.13.8_2-r0 (2023/12/27)
 
 * UDNS support (#303)

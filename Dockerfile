@@ -9,8 +9,8 @@ ARG RTORRENT_VERSION=v0.9.8
 ARG MKTORRENT_VERSION=v1.1
 ARG GEOIP2_PHPEXT_VERSION=1.3.1
 
-# v4.2.10
-ARG RUTORRENT_VERSION=c9644dda7a9ac1b3fc8b663392c4168adbe5a312
+# v4.3.0
+ARG RUTORRENT_VERSION=4e47301f36d04d219b76c71ed4fd8d37e8b62e4f
 ARG GEOIP2_RUTORRENT_VERSION=4ff2bde530bb8eef13af84e4413cedea97eda148
 
 ARG ALPINE_VERSION=3.19
@@ -199,6 +199,11 @@ ENV PYTHONPATH="$PYTHONPATH:/var/www/rutorrent" \
   PUID="1000" \
   PGID="1000"
 
+# increase rmem_max and wmem_max for rTorrent configuration
+RUN echo "net.core.rmem_max = 67108864" >> /etc/sysctl.conf \
+  && echo "net.core.wmem_max = 67108864" >> /etc/sysctl.conf \
+  && sysctl -p
+
 # unrar package is not available since alpine 3.15
 RUN echo "@314 http://dl-cdn.alpinelinux.org/alpine/v3.14/main" >> /etc/apk/repositories \
   && apk --update --no-cache add unrar@314
@@ -230,6 +235,7 @@ RUN apk --update --no-cache add \
     php82-ctype \
     php82-curl \
     php82-dom \
+    php82-fileinfo \
     php82-fpm \
     php82-mbstring \
     php82-openssl \
