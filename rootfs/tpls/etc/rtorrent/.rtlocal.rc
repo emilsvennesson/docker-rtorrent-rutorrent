@@ -68,4 +68,4 @@ log.add_output = "rpc_events","log"
 execute2 = {sh,-c,/usr/bin/php82 /var/www/rutorrent/php/initplugins.php rtorrent &}
 
 # cross-seed
-method.set_key=event.download.finished,cross_seed,"execute={(cat,(cfg.cs)),$d.name=}"
+method.set_key=event.download.finished,cross_seed,"execute={(cat,(cfg.cs)),$d.name=,$d.hash=,$d.data_path=}"
