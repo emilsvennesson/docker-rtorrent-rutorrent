@@ -64,19 +64,19 @@ fi
 if [ -n "$WAN_IP" ]; then
   echo "Public IP address enforced to ${WAN_IP}"
 fi
-printf "%s" "$WAN_IP" > /var/run/s6/container_environment/WAN_IP
+printf "%s" "$WAN_IP" >/var/run/s6/container_environment/WAN_IP
 
 # Timezone
 echo "Setting timezone to ${TZ}..."
 ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime
-echo ${TZ} > /etc/timezone
+echo ${TZ} >/etc/timezone
 
 # PHP
 echo "Setting PHP-FPM configuration..."
 sed -e "s/@MEMORY_LIMIT@/$MEMORY_LIMIT/g" \
   -e "s/@UPLOAD_MAX_SIZE@/$UPLOAD_MAX_SIZE/g" \
   -e "s/@CLEAR_ENV@/$CLEAR_ENV/g" \
-  /tpls/etc/php82/php-fpm.d/www.conf > /etc/php82/php-fpm.d/www.conf
+  /tpls/etc/php82/php-fpm.d/www.conf >/etc/php82/php-fpm.d/www.conf
 
 echo "Setting PHP INI configuration..."
 sed -i "s|memory_limit.*|memory_limit = ${MEMORY_LIMIT}|g" /etc/php82/php.ini
@@ -86,7 +86,7 @@ sed -i "s|max_file_uploads.*|max_file_uploads = ${MAX_FILE_UPLOADS}|g" /etc/php8
 # OpCache
 echo "Setting OpCache configuration..."
 sed -e "s/@OPCACHE_MEM_SIZE@/$OPCACHE_MEM_SIZE/g" \
-  /tpls/etc/php82/conf.d/opcache.ini > /etc/php82/conf.d/opcache.ini
+  /tpls/etc/php82/conf.d/opcache.ini >/etc/php82/conf.d/opcache.ini
 
 # Nginx
 echo "Setting Nginx configuration..."
@@ -94,7 +94,7 @@ sed -e "s#@REAL_IP_FROM@#$REAL_IP_FROM#g" \
   -e "s#@REAL_IP_HEADER@#$REAL_IP_HEADER#g" \
   -e "s#@LOG_IP_VAR@#$LOG_IP_VAR#g" \
   -e "s#@AUTH_DELAY@#$AUTH_DELAY#g" \
-  /tpls/etc/nginx/nginx.conf > /etc/nginx/nginx.conf
+  /tpls/etc/nginx/nginx.conf >/etc/nginx/nginx.conf
 if [ "${LOG_ACCESS}" != "true" ]; then
   echo "  Disabling Nginx access log..."
   sed -i "s!access_log /proc/self/fd/1 main!access_log off!g" /etc/nginx/nginx.conf
@@ -106,7 +106,7 @@ sed -e "s!@XMLRPC_AUTHBASIC_STRING@!$XMLRPC_AUTHBASIC_STRING!g" \
   -e "s!@XMLRPC_PORT@!$XMLRPC_PORT!g" \
   -e "s!@XMLRPC_HEALTH_PORT@!$XMLRPC_HEALTH_PORT!g" \
   -e "s!@XMLRPC_SIZE_LIMIT@!$XMLRPC_SIZE_LIMIT!g" \
-  /tpls/etc/nginx/conf.d/rpc.conf > /etc/nginx/conf.d/rpc.conf
+  /tpls/etc/nginx/conf.d/rpc.conf >/etc/nginx/conf.d/rpc.conf
 
 # Nginx ruTorrent
 echo "Setting Nginx ruTorrent configuration..."
@@ -114,18 +114,18 @@ sed -e "s!@UPLOAD_MAX_SIZE@!$UPLOAD_MAX_SIZE!g" \
   -e "s!@RUTORRENT_AUTHBASIC_STRING@!$RUTORRENT_AUTHBASIC_STRING!g" \
   -e "s!@RUTORRENT_PORT@!$RUTORRENT_PORT!g" \
   -e "s!@RUTORRENT_HEALTH_PORT@!$RUTORRENT_HEALTH_PORT!g" \
-  /tpls/etc/nginx/conf.d/rutorrent.conf > /etc/nginx/conf.d/rutorrent.conf
+  /tpls/etc/nginx/conf.d/rutorrent.conf >/etc/nginx/conf.d/rutorrent.conf
 
 # Nginx WebDAV
 echo "Setting Nginx WebDAV configuration..."
 sed -e "s!@WEBDAV_AUTHBASIC_STRING@!$WEBDAV_AUTHBASIC_STRING!g" \
   -e "s!@WEBDAV_PORT@!$WEBDAV_PORT!g" \
   -e "s!@WEBDAV_HEALTH_PORT@!$WEBDAV_HEALTH_PORT!g" \
-  /tpls/etc/nginx/conf.d/webdav.conf > /etc/nginx/conf.d/webdav.conf
+  /tpls/etc/nginx/conf.d/webdav.conf >/etc/nginx/conf.d/webdav.conf
 
 # Healthcheck
 echo "Update healthcheck script..."
-cat > /usr/local/bin/healthcheck <<EOL
+cat >/usr/local/bin/healthcheck <<EOL
 #!/bin/sh
 set -e
 
@@ -188,7 +188,7 @@ sed -e "s!@RT_LOG_LEVEL@!$RT_LOG_LEVEL!g" \
   -e "s!@RT_SEND_BUFFER_SIZE@!$RT_SEND_BUFFER_SIZE!g" \
   -e "s!@RT_RECEIVE_BUFFER_SIZE@!$RT_RECEIVE_BUFFER_SIZE!g" \
   -e "s!@RT_PREALLOCATE_TYPE@!$RT_PREALLOCATE_TYPE!g" \
-  /tpls/etc/rtorrent/.rtlocal.rc > /etc/rtorrent/.rtlocal.rc
+  /tpls/etc/rtorrent/.rtlocal.rc >/etc/rtorrent/.rtlocal.rc
 if [ "${RT_LOG_EXECUTE}" = "true" ]; then
   echo "  Enabling rTorrent execute log..."
   sed -i "s!#log\.execute.*!log\.execute = (cat,(cfg.logs),\"execute.log\")!g" /etc/rtorrent/.rtlocal.rc
@@ -198,16 +198,15 @@ if [ "${RT_LOG_XMLRPC}" = "true" ]; then
   sed -i "s!#log\.xmlrpc.*!log\.xmlrpc = (cat,(cfg.logs),\"xmlrpc.log\")!g" /etc/rtorrent/.rtlocal.rc
 fi
 
+# cross-seed script
+echo "Copying cross-seed script..."
+cp /tpls/rtorrent-cross-seed.sh /data/rtorrent/rtorrent-cross-seed.sh
+
 # rTorrent config
 echo "Checking rTorrent configuration..."
 if [ ! -f /data/rtorrent/.rtorrent.rc ]; then
   echo "  Creating default rTorrent configuration..."
   cp /tpls/.rtorrent.rc /data/rtorrent/.rtorrent.rc
-fi
-# cross-seed script
-if [ ! -f /data/rtorrent/rtorrent-cross-seed.sh ]; then
-  echo "  Creating default cross-seed config..."
-  cp /tpls/rtorrent-cross-seed.sh /data/rtorrent/rtorrent-cross-seed.sh
 fi
 chown rtorrent:rtorrent /data/rtorrent/.rtorrent.rc
 chown rtorrent:rtorrent /data/rtorrent/rtorrent-cross-seed.sh
@@ -215,7 +214,7 @@ chmod +x /data/rtorrent/rtorrent-cross-seed.sh
 
 # ruTorrent config
 echo "Bootstrapping ruTorrent configuration..."
-cat > /var/www/rutorrent/conf/config.php <<EOL
+cat >/var/www/rutorrent/conf/config.php <<EOL
 <?php
 
 // for snoopy client
@@ -312,14 +311,13 @@ chown rtorrent:rtorrent /data/rutorrent/conf/plugins.ini
 
 # Remove ruTorrent core plugins
 if [ "$RU_REMOVE_CORE_PLUGINS" != "false" ]; then
-  for i in ${RU_REMOVE_CORE_PLUGINS//,/ }
-  do
+  for i in ${RU_REMOVE_CORE_PLUGINS//,/ }; do
     if [ -z "$i" ]; then continue; fi
     if [ "$i" == "httprpc" ]; then
       echo "Warning: skipping core plugin httprpc, required for ruTorrent v4.3+ operation"
       echo "Please remove httprpc from RU_REMOVE_CORE_PLUGINS environment varriable"
-      continue;
-    fi      
+      continue
+    fi
     echo "Removing core plugin $i..."
     rm -rf "/var/www/rutorrent/plugins/${i}"
   done
@@ -328,7 +326,7 @@ fi
 echo "Setting custom config for create plugin..."
 if [ -d "/var/www/rutorrent/plugins/create" ]; then
 
-  cat > /var/www/rutorrent/plugins/create/conf.php <<EOL
+  cat >/var/www/rutorrent/plugins/create/conf.php <<EOL
 <?php
 
 \$useExternal = 'mktorrent';
