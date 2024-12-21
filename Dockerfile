@@ -8,7 +8,7 @@ ARG MKTORRENT_VERSION=v1.1
 ARG GEOIP2_PHPEXT_VERSION=1.3.1
 
 # v5.1.1
-ARG RUTORRENT_VERSION=12eb2cfba5846714cc9909865ceba3a7c1db0de7
+ARG RUTORRENT_VERSION=699af5f45fef33d8f2b57792ffe7a48d084f2bed
 ARG GEOIP2_RUTORRENT_VERSION=4ff2bde530bb8eef13af84e4413cedea97eda148
 ARG DUMP_TORRENT_VERSION=302ac444a20442edb4aeabef65b264a85ab88ce9
 
@@ -158,7 +158,7 @@ RUN tree ${DIST_PATH}
 
 WORKDIR /usr/local/src/mktorrent
 COPY --from=src-mktorrent /src .
-RUN echo "CC = gcc" >> Makefile	
+RUN echo "CC = gcc" >> Makefile
 RUN echo "CFLAGS = -w -flto -O3" >> Makefile
 RUN echo "USE_PTHREADS = 1" >> Makefile
 RUN echo "USE_OPENSSL = 1" >> Makefile
