@@ -11,7 +11,7 @@
 
 ## About
 
-[rTorrent](https://github.com/rakshasa/rtorrent) with [ruTorrent](https://github.com/Novik/ruTorrent)
+[stickz rTorrent](https://github.com/stickz/rtorrent) with [ruTorrent](https://github.com/Novik/ruTorrent)
 Docker image.
 
 > [!TIP] 
@@ -44,6 +44,7 @@ ___
   * [Configure rTorrent session saving](#configure-rtorrent-session-saving)
   * [Configure rTorrent tracker scrape](#rtorrent-tracker-scrape-patch)
   * [Configure rTorrent send receive buffers](#rtorrent-send-receive-buffers)
+  * [Configure rTorrent disk space preallocation](#rtorrent-disk-space-preallocation)
 * [Upgrade](#upgrade)
 * [Contributing](#contributing)
 * [License](#license)
@@ -52,9 +53,9 @@ ___
 
 * Run as non-root user
 * Multi-platform image
-* Latest [rTorrent](https://github.com/rakshasa/rtorrent) / [libTorrent](https://github.com/rakshasa/libtorrent) release compiled from source
-  * Includes [rTorrent patches](./patches/rtorrent) to increase software stability
-  * Includes [libtorrent patches](./patches/libtorrent) to increase software stability
+* Latest rTorrent and libTorrent from [rTorrent stickz](https://github.com/stickz/rtorrent) project.
+  * Includes significant performance and stability improvements.
+  * Includes compatibility with Link Time Optimizations.
 * Latest [ruTorrent](https://github.com/Novik/ruTorrent) release
 * Domain name resolving enhancements with [c-ares](https://github.com/rakshasa/rtorrent/wiki/Performance-Tuning#rtrorrent-with-c-ares) and [UDNS](https://www.corpit.ru/mjt/udns.html) for asynchronous DNS requests
 * Enhanced [rTorrent config](rootfs/tpls/.rtorrent.rc) and bootstraping with a [local config](rootfs/tpls/etc/rtorrent/.rtlocal.rc)
@@ -63,7 +64,7 @@ ___
 * Ability to add a custom ruTorrent plugin / theme
 * Allow persisting specific configuration for ruTorrent plugins
 * ruTorrent [GeoIP2 plugin](https://github.com/Micdu70/geoip2-rutorrent)
-* [mktorrent](https://github.com/Rudde/mktorrent) installed for ruTorrent create plugin
+* [mktorrent](https://github.com/pobrn/mktorrent) installed for ruTorrent create plugin
 * [Traefik](https://github.com/containous/traefik-library-image) Docker image as reverse proxy and creation/renewal of Let's Encrypt certificates (see [this template](examples/traefik))
 * [geoip-updater](https://github.com/crazy-max/geoip-updater) Docker image to download MaxMind's GeoIP2 databases on a time-based schedule for geolocation
 
@@ -93,15 +94,15 @@ docker buildx bake image-all
 Following platforms for this image are available:
 
 ```
-$ docker run --rm mplatform/mquery crazymax/rtorrent-rutorrent:latest
-Image: crazymax/rtorrent-rutorrent:latest
- * Manifest List: Yes
- * Supported platforms:
-   - linux/amd64
-   - linux/arm/v6
-   - linux/arm/v7
-   - linux/arm64
+$ docker buildx imagetools inspect crazymax/rtorrent-rutorrent --format "{{json .Manifest}}" | \
+  jq -r '.manifests[] | select(.platform.os != null and .platform.os != "unknown") | .platform | "\(.os)/\(.architecture)\(if .variant then "/" + .variant else "" end)"'
+
+linux/amd64
+linux/arm/v6
+linux/arm/v7
+linux/arm64
 ```
+
 
 ## Environment variables
 
@@ -141,6 +142,7 @@ Image: crazymax/rtorrent-rutorrent:latest
 * `RT_INC_PORT`: Incoming connections (`network.port_range.set`, default `50000`)
 * `RT_SEND_BUFFER_SIZE`: Sets default tcp wmem value (`network.send_buffer.size.set`, default `4M`)
 * `RT_RECEIVE_BUFFER_SIZE`: Sets default tcp rmem value (`network.receive_buffer.size.set`, default `4M`)
+* `RT_PREALLOCATE_TYPE`: Sets the type of [disk space preallocation](#rtorrent-disk-space-preallocation) (default `0`)
 
 ### ruTorrent
 
@@ -381,6 +383,27 @@ Memory is better spent elsewhere except under limited circumstances for high
 memory and speed conditions. The default values should not be increased, unless
 both the memory and speed requirements are met. These values of system memory
 are also recommended based on the port speed for rTorrent to reduce disk usage.
+
+### rTorrent disk space preallocation
+
+Preallocate disk space for contents of a torrent
+
+* `RT_PREALLOCATE_TYPE`: Sets the type of disk space preallocation to use.
+
+Acceptable values:
+* `0 = disabled (default value)`
+* `1 = enabled, allocate when a file is opened for write`
+* `2 = enabled, allocate space for the whole torrent at once`
+
+This feature is disabled by default becuase it only benefits HDDs.
+By allocating files in sequence we can increase the read speed for seeding.
+
+The first type "1" only allocates disk space for files which start downloading.
+Use where disk space is more important than speed. Or you intend to download selective torrent files.
+
+The second type "2" allocates disk space for the entire torrent, whether it's downloaded or not.
+This method is faster than "1" becuase it reduces random reads for the entire torrent.
+Use where speed is more important than disk space. Or you intend to download 100% of every torrent.
 
 ## Upgrade
 
