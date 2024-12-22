@@ -16,7 +16,8 @@ method.insert = cfg.rundir, private|const|string, (cat,"/var/run/rtorrent/")
 method.insert = d.data_path, simple, "if=(d.is_multi_file), (cat,(d.directory),/), (cat,(d.directory),/,(d.name))"
 
 # Default directory to save the downloaded torrents
-directory.default.set = (cat,(cfg.download))
+# uncommented for rtorrent
+# directory.default.set = (cat,(cfg.download))
 
 # Default session directory
 session.path.set = (cat,(cfg.session))
